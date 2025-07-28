@@ -1,3 +1,12 @@
+import OpenAI from 'openai';
+
+const client = new OpenAI({
+  apiKey: process.env['OPENAI_API_KEY'], // This is the default and can be omitted
+});
+
+
+
+
 export class TrendsList {
     trends: {name:string}[]
 }
@@ -20,6 +29,11 @@ export const shortSummaryOfMessages = async (tweets: string): Promise<string> =>
 
     ${politicalSentivityPhrase}`; //TODO enforce schema
     const result = "Everyone is in a buzz about the new iPhone release. Some discontent exists in United States politics.";//todo actual api call
+    const response = await client.responses.create({
+        model: 'gpt-4o',
+        instructions: 'You are a coding assistant that talks like a pirate',
+        input: 'Are semicolons optional in JavaScript?',
+    });
     return result;
 }
 
