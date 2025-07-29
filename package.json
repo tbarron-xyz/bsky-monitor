@@ -9,7 +9,8 @@
     "greenlock-express": "^4.0.3",
     "openai": "^5.10.2",
     "redis": "^4.7.0",
-    "sentiment": "^5.0.2"
+    "sentiment": "^5.0.2",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/node": "^22.10.7"

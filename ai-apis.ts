@@ -1,40 +1,59 @@
 import OpenAI from 'openai';
+import { zodResponseFormat } from 'openai/helpers/zod';
+import { z } from 'zod';
 
 const client = new OpenAI({
   apiKey: process.env['OPENAI_API_KEY'], // This is the default and can be omitted
 });
 
+const trendsSchema = z.object({
+    trends: z.array( z.object({
+        name: z.string()
+    }) )
+});
 
+const summarySchema = z.object({
+    summary: z.string()
+});
 
+const model = "gpt-4o-nano";
 
 export class TrendsList {
     trends: {name:string}[]
 }
 
-export const getTrendsFromTweets = (tweets: string): TrendsList => {
-    const prompt = `You are given a list of messages from a social media platform. Your task is to identify recurring topics in the data.
-    
-    Your response format is to be as follows: TODO JSON Schema`; 
+export const getTrendsFromTweets = async (tweets: string): Promise<TrendsList> => {
+    const prompt = `You are given a list of messages from a social media platform. Your task is to identify recurring trends or topics in the data.`; 
     // todo enforce json schema at api call level
-    const result = { trends: [
-            { name: "Solar energy"},
-            { name: "Bacon shortage"}
-        ]} as TrendsList; //todo actually call openapi api
-    return result;
+    const response = await client.chat.completions.create({
+        model: model,
+        // instructions: 'You are a coding assistant that talks like a pirate',
+        // input: 'Are semicolons optional in JavaScript?',
+              messages: [
+                { role: 'system', content: prompt},
+                { role: 'user', content: tweets },
+      ],
+        response_format: zodResponseFormat(trendsSchema, "trends")
+    }).then(x => x.choices[0].message.content as string);
+    return trendsSchema.parse(response);
 }
 
-export const shortSummaryOfMessages = async (tweets: string): Promise<string> => {
-    const politicalSentivityPhrase = `Do not use any language explicitly referring to ant particular active military or political conflict; instead refer to the issue generally.`
+export const shortSummaryOfTweets = async (tweets: string): Promise<string> => {
+    const politicalSentivityPhrase = `Do not use any language explicitly referring to any particular active military or political conflict; instead refer to the issue generally.`
     const prompt = `Produce a short (two to three sentences) text summary of what's going on in the following messages from a social platform.
 
-    ${politicalSentivityPhrase}`; //TODO enforce schema
-    const result = "Everyone is in a buzz about the new iPhone release. Some discontent exists in United States politics.";//todo actual api call
-    const response = await client.responses.create({
-        model: 'gpt-4o',
-        instructions: 'You are a coding assistant that talks like a pirate',
-        input: 'Are semicolons optional in JavaScript?',
-    });
-    return result;
+    ${politicalSentivityPhrase}`;
+    const response = await client.chat.completions.create({
+        model: model,
+        // instructions: 'You are a coding assistant that talks like a pirate',
+        // input: 'Are semicolons optional in JavaScript?',
+              messages: [
+                { role: 'system', content: prompt},
+                { role: 'user', content: tweets },
+      ],
+        response_format: zodResponseFormat(summarySchema, "summary")
+    }).then(x => x.choices[0].message.content as string);
+    return response;
 }
 
 // old functions contained hereon 

@@ -4,7 +4,9 @@ export const redisKeys = Object.freeze({
     mentions: "mentions",
     totalSentiment: "totalSentiment",
     mentionsSorted: "mentionsSorted",
-    sentimentSorted: "sentimentSorted"
+    sentimentSorted: "sentimentSorted",
+    currentWeather: "currentWeather",
+    currentTrends: "currentTrends"
 });
 
 

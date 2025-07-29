@@ -54,9 +54,16 @@ const removeSortedsetValuesOlderThan5minutes = async () => {
     await redisClient.zRemRangeByScore(redisKeys.mentionsSorted, -Infinity, Date.now() - 1000 * 60 * 5);
 }
 
+const getCurrentWeatherAndTrends = async () => {
+    const key = redisKeys.currentWeather;
+    const result = await redisClient.get(key);
+    return result;
+}
+
 await getDailyMentions();
 await getDailySentiment();
 await getSortedMentions();
 await getSortedSentiment();
+await getCurrentWeatherAndTrends();
 await removeSortedsetValuesOlderThan5minutes();
 await redisClient.disconnect();
