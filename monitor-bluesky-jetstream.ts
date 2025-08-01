@@ -3,7 +3,7 @@ import { Jetstream } from "@skyware/jetstream";
 
 import { redisClient, redisKeys } from "./redisUtils.ts";
 import { getTrendsFromTweets, shortSummaryOfTweets } from './ai-apis.ts';
-import { forEachTweet } from './sentiment-analysis.ts';
+import { sentimentAnalysisForEachTweet } from './sentiment-analysis.ts';
 
 const jetstream = new Jetstream({
 	wantedCollections: ["app.bsky.feed.post",
@@ -15,18 +15,24 @@ const jetstream = new Jetstream({
 });
 
 let counter = 0; // used for calling summarization every X tweets
+const last100Tweets: string[] = []; // todo use redis
+const addToLast100 = (tweet: string) => {
+    if (last100Tweets.length > 100) { last100Tweets.shift(); }
+    last100Tweets.push(tweet);
+}
 
 jetstream.onCreate("app.bsky.feed.post", (event) => {
     const text = event.commit.record.text;
-    forEachTweet(text);
+    sentimentAnalysisForEachTweet(text);
+    addToLast100(text);
     if (counter % 100 == 0) {
-        const last100TweetsConcat = "";//todo get from redis
+        const last100TweetsConcat = last100Tweets.reduce((a,b) => `${a}${b}`);//todo get from redis
         shortSummaryOfTweets(last100TweetsConcat).then(result => {
-            redisClient.set(redisKeys.currentWeather, result);
+            redisClient.set(redisKeys.currentSummary, result);
         });
         getTrendsFromTweets(last100TweetsConcat).then(result => {
             redisClient.set(redisKeys.currentTrends, JSON.stringify(result));
-        })
+        });
     }
     counter++;
 });

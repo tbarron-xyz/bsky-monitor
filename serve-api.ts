@@ -11,7 +11,6 @@ const getDailyMentions = async () => {
     const dailies = Object.fromEntries(
         Object.keys(result).filter(key => key.split("_").length == 2).map(key => [key, parseInt(result[key])])
     );
-    // Object.keys(result).map(key => );
     console.log("hgetall mentions: ", dailies);
     return dailies;
 }
@@ -21,7 +20,6 @@ const getDailySentiment = async () => {
     const dailies = Object.fromEntries(
         Object.keys(result).filter(key => key.split("_").length == 2).map(key => [key, parseInt(result[key])])
     );
-    // Object.keys(result).map(key => );
     console.log("hgetall sentiment: ", dailies);
     return dailies;
 }
@@ -54,16 +52,22 @@ const removeSortedsetValuesOlderThan5minutes = async () => {
     await redisClient.zRemRangeByScore(redisKeys.mentionsSorted, -Infinity, Date.now() - 1000 * 60 * 5);
 }
 
-const getCurrentWeatherAndTrends = async () => {
-    const key = redisKeys.currentWeather;
-    const result = await redisClient.get(key);
-    return result;
+const getCurrentSummaryAndTrends = async () => {
+    const key = redisKeys.currentSummary;
+    const summary = await redisClient.get(key);
+    const trends = await redisClient.get(redisKeys.currentTrends);
+    return {
+        summary: summary,
+        trends: trends
+    };
 }
 
+
+// print demo values to console; express server should be fired up here when actually serving
 await getDailyMentions();
 await getDailySentiment();
 await getSortedMentions();
 await getSortedSentiment();
-await getCurrentWeatherAndTrends();
+await getCurrentSummaryAndTrends();
 await removeSortedsetValuesOlderThan5minutes();
 await redisClient.disconnect();

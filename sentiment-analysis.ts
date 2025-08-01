@@ -52,7 +52,7 @@ const allStringTargets = shortnamesMinusInc as string[];
 console.dir(symbols.concat(allStringTargets), {maxArrayLength: null});
 
 
-export const forEachTweet = <T>(text: string) => {
+export const sentimentAnalysisForEachTweet = <T>(text: string) => {
    
    const sentimentResult = sentiment.analyze(text);
     const tokensFound = sentimentResult.tokens;//.map(x => x

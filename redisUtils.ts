@@ -5,7 +5,7 @@ export const redisKeys = Object.freeze({
     totalSentiment: "totalSentiment",
     mentionsSorted: "mentionsSorted",
     sentimentSorted: "sentimentSorted",
-    currentWeather: "currentWeather",
+    currentSummary: "currentSummary",
     currentTrends: "currentTrends"
 });
 
