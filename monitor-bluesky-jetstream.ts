@@ -2,7 +2,7 @@
 import { Jetstream } from "@skyware/jetstream";
 
 import { redisClient, redisKeys } from "./redisUtils.ts";
-import { getTrendsFromTweets, shortSummaryOfTweets, trendsFromSummaries } from './ai-apis.ts';
+import { getTrendsFromTweets, shortSummaryOfTweets, subtopics, trendsFromSummaries } from './ai-apis.ts';
 import { sentimentAnalysisForEachTweet } from './sentiment-analysis.ts';
 
 const jetstream = new Jetstream({
@@ -36,7 +36,13 @@ jetstream.onCreate("app.bsky.feed.post", (event) => {
         shortSummaryOfTweets(last100TweetsConcat).then(result => {
             addToLastSummaries(result);
             redisClient.set(redisKeys.currentSummary, result);
-            trendsFromSummaries(last100Summaries).then()
+            trendsFromSummaries(last100Summaries).then(trends => {
+                redisClient.set(redisKeys.currentTrends, JSON.stringify(trends, null, 2));
+            })
+        });
+        subtopics(last100Tweets).then(result => {
+            redisClient.set(redisKeys.subtopics, JSON.stringify(result, null, 2));
+            // console.log(result);
         });
         // getTrendsFromTweets(last100TweetsConcat).then(result => {
         //     redisClient.set(redisKeys.currentTrends, JSON.stringify(result));

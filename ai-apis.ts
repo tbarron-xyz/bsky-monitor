@@ -12,6 +12,22 @@ const trendsSchema = z.object({
     }) )
 });
 
+const subtopicsSchema = z.object({
+    politics: z.array( z.object({
+        name: z.string()
+    }) ),
+    culture: z.array( z.object({
+        name: z.string()
+    }) ),
+    food: z.array( z.object({
+        name: z.string()
+    }) ),
+    technology: z.array( z.object({
+        name: z.string()
+    }) )
+});
+
+
 const summarySchema = z.object({
     summary: z.string()
 });
@@ -88,6 +104,32 @@ export const trendsFromSummaries = async (summaries: string[]): Promise<string[]
     return response;
 }
 
+export const subtopics = async (tweets: string[]): Promise<{}> => {
+    const politicalSentivityPhrase = "";//`Do not use any language explicitly referring to any particular active military or political conflict; instead refer to the issue generally.`
+
+    const prompt = `You are given a list of messages from social media. What are some specific political topics being discussed? What are some specific elements of arts and culture being discussed? What are some specific elements of food being discussed? What are some specific topics in technology being discussed?
+
+    ${politicalSentivityPhrase}
+    `;
+    // console.log("Sending subtopics request");
+    const response = await client.chat.completions.create({
+        model: model,
+        // instructions: 'You are a coding assistant that talks like a pirate',
+        // input: 'Are semicolons optional in JavaScript?',
+              messages: [
+                { role: 'system', content: prompt},
+                { role: 'user', content: tweets.join("\n") },
+      ],
+        response_format: zodResponseFormat(subtopicsSchema, "subtopics")
+    }).then(x => {
+        const value = x.choices[0].message.content as string;
+        const jValue = subtopicsSchema.parse(JSON.parse(value));
+        console.log(`Your hard-earned dollars paid for this OpenAI API response: `);
+        console.log(jValue);
+        return jValue;
+    });
+    return response;
+}
 
 // old functions contained hereon 
 

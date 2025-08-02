@@ -6,7 +6,8 @@ export const redisKeys = Object.freeze({
     mentionsSorted: "mentionsSorted",
     sentimentSorted: "sentimentSorted",
     currentSummary: "currentSummary",
-    currentTrends: "currentTrends"
+    currentTrends: "currentTrends",
+    subtopics: "subtopics"
 });
 
 
