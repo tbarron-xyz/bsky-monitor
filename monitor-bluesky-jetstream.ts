@@ -2,7 +2,7 @@
 import { Jetstream } from "@skyware/jetstream";
 
 import { redisClient, redisKeys } from "./redisUtils.ts";
-import { getTrendsFromTweets, shortSummaryOfTweets } from './ai-apis.ts';
+import { getTrendsFromTweets, shortSummaryOfTweets, trendsFromSummaries } from './ai-apis.ts';
 import { sentimentAnalysisForEachTweet } from './sentiment-analysis.ts';
 
 const jetstream = new Jetstream({
@@ -21,18 +21,26 @@ const addToLast100 = (tweet: string) => {
     last100Tweets.push(tweet);
 }
 
+const last100Summaries: string[] = [];
+const addToLastSummaries = (summary: string) => {
+    if (last100Summaries.length > 10) { last100Summaries.shift(); }
+    last100Summaries.push(summary);
+}
+
 jetstream.onCreate("app.bsky.feed.post", (event) => {
     const text = event.commit.record.text;
-    sentimentAnalysisForEachTweet(text);
+    // sentimentAnalysisForEachTweet(text); // disabing for now
     addToLast100(text);
-    if (counter % 100 == 0) {
-        const last100TweetsConcat = last100Tweets.reduce((a,b) => `${a}${b}`);//todo get from redis
+    if (counter % 1000 == 0) {
+        const last100TweetsConcat = last100Tweets.reduce((a,b) => `${a}\n${b}`);//todo get from redis
         shortSummaryOfTweets(last100TweetsConcat).then(result => {
+            addToLastSummaries(result);
             redisClient.set(redisKeys.currentSummary, result);
+            trendsFromSummaries(last100Summaries).then()
         });
-        getTrendsFromTweets(last100TweetsConcat).then(result => {
-            redisClient.set(redisKeys.currentTrends, JSON.stringify(result));
-        });
+        // getTrendsFromTweets(last100TweetsConcat).then(result => {
+        //     redisClient.set(redisKeys.currentTrends, JSON.stringify(result));
+        // });
     }
     counter++;
 });

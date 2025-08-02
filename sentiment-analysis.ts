@@ -49,7 +49,7 @@ const shortnamesMinusInc = shortnameComponentsToRemove.reduce((shortnamesTemp, c
 
 const allTokenTargets = symbols as string[];
 const allStringTargets = shortnamesMinusInc as string[];
-console.dir(symbols.concat(allStringTargets), {maxArrayLength: null});
+// console.dir(symbols.concat(allStringTargets), {maxArrayLength: null});
 
 
 export const sentimentAnalysisForEachTweet = <T>(text: string) => {

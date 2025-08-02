@@ -16,14 +16,14 @@ const summarySchema = z.object({
     summary: z.string()
 });
 
-const model = "gpt-4o-nano";
+const model = "gpt-4.1-nano";
 
 export class TrendsList {
     trends: {name:string}[]
 }
 
 export const getTrendsFromTweets = async (tweets: string): Promise<TrendsList> => {
-    const prompt = `You are given a list of messages from a social media platform. Your task is to identify recurring trends or topics in the data.`; 
+    const prompt = `You are given a list of messages from a social media platform. Your task is to identify recurring trends or topics in the data. Just talk about the trends`; 
     // todo enforce json schema at api call level
     const response = await client.chat.completions.create({
         model: model,
@@ -35,14 +35,17 @@ export const getTrendsFromTweets = async (tweets: string): Promise<TrendsList> =
       ],
         response_format: zodResponseFormat(trendsSchema, "trends")
     }).then(x => x.choices[0].message.content as string);
+    console.log(`API Response: ${response}`);
     return trendsSchema.parse(response);
 }
 
 export const shortSummaryOfTweets = async (tweets: string): Promise<string> => {
-    const politicalSentivityPhrase = `Do not use any language explicitly referring to any particular active military or political conflict; instead refer to the issue generally.`
-    const prompt = `Produce a short (two to three sentences) text summary of what's going on in the following messages from a social platform.
+    const politicalSentivityPhrase = "";//`Do not use any language explicitly referring to any particular active military or political conflict; instead refer to the issue generally.`
 
-    ${politicalSentivityPhrase}`;
+    const prompt = `Produce a short (two to three sentences) text summary of what's going on in the following messages from a social platform. Don't refer to the messages per se; just refer to the topics or subjects or moods contained therein. Make it sound as if you're writing abstractly of these things, without having summarized them from a list of messages. Do not use the phrase "the messages". Make sure to refer to at least two specific examples of concrete topics.
+
+    ${politicalSentivityPhrase}
+    `;
     const response = await client.chat.completions.create({
         model: model,
         // instructions: 'You are a coding assistant that talks like a pirate',
@@ -52,9 +55,39 @@ export const shortSummaryOfTweets = async (tweets: string): Promise<string> => {
                 { role: 'user', content: tweets },
       ],
         response_format: zodResponseFormat(summarySchema, "summary")
-    }).then(x => x.choices[0].message.content as string);
+    }).then(x => {
+        const value = x.choices[0].message.content as string;
+        const jValue = summarySchema.parse(JSON.parse(value));
+        console.log(`Your hard-earned dollars paid for this OpenAI API response: `);
+        console.log(jValue);
+        return jValue.summary;
+    });
     return response;
 }
+
+export const trendsFromSummaries = async (summaries: string[]): Promise<string[]> => {
+    const prompt = "You are given a list of summaries of conversations. Your job is to identify at least 5 trends and topics which occur in multiple summaries. The matches do not have to be exact and can be only roughly similar.";
+    
+
+    const response = await client.chat.completions.create({
+        model: model,
+        // instructions: 'You are a coding assistant that talks like a pirate',
+        // input: 'Are semicolons optional in JavaScript?',
+              messages: [
+                { role: 'system', content: prompt},
+                { role: 'user', content: summaries.join("\n") },
+      ],
+        response_format: zodResponseFormat(trendsSchema, "trends")
+    }).then(x => {
+        const value = x.choices[0].message.content as string;
+        const jValue = trendsSchema.parse(JSON.parse(value));
+        console.log(`Your hard-earned dollars paid for this OpenAI API response: `);
+        console.log(jValue);
+        return jValue.trends.map(x => x.name);
+    });
+    return response;
+}
+
 
 // old functions contained hereon 
 
