@@ -1,7 +1,7 @@
 
 import { Jetstream } from "@skyware/jetstream";
 
-import { redisClient, redisKeys } from "./redisUtils.ts";
+import { add, redisClient, redisKeys, trim } from "./redisUtils.ts";
 import { getTrendsFromTweets, shortSummaryOfTweets, subtopics, trendsFromSummaries } from './ai-apis.ts';
 import { sentimentAnalysisForEachTweet } from './sentiment-analysis.ts';
 
@@ -15,38 +15,40 @@ const jetstream = new Jetstream({
 });
 
 let counter = 0; // used for calling summarization every X tweets
-const last100Tweets: string[] = []; // todo use redis
 const addToLast100 = (tweet: string) => {
-    if (last100Tweets.length > 100) { last100Tweets.shift(); }
-    last100Tweets.push(tweet);
+    add(redisKeys.messagesList, tweet);
+    trim(redisKeys.messagesList, 0, 100);
 }
 
-const last100Summaries: string[] = [];
 const addToLastSummaries = (summary: string) => {
-    if (last100Summaries.length > 10) { last100Summaries.shift(); }
-    last100Summaries.push(summary);
+    add(redisKeys.messagesList, summary);
+    trim(redisKeys.summariesList, 0, 100);
 }
 
 jetstream.onCreate("app.bsky.feed.post", (event) => {
     const text = event.commit.record.text;
     // sentimentAnalysisForEachTweet(text); // disabing for now
     addToLast100(text);
+    // add(redisKeys.messagesList, text);
+    // trim(redisKeys.messagesList, 0, 100);
     if (counter % 1000 == 0) {
-        const last100TweetsConcat = last100Tweets.reduce((a,b) => `${a}\n${b}`);//todo get from redis
-        shortSummaryOfTweets(last100TweetsConcat).then(result => {
-            addToLastSummaries(result);
-            redisClient.set(redisKeys.currentSummary, result);
-            trendsFromSummaries(last100Summaries).then(trends => {
-                redisClient.set(redisKeys.currentTrends, JSON.stringify(trends, null, 2));
-            })
+        // const last100 = 
+        redisClient.lRange(redisKeys.messagesList, 0, 100).then(last100Tweets => {
+            const last100TweetsConcat = last100Tweets.reduce((a,b) => `${a}\n${b}`);//todo get from redis
+            shortSummaryOfTweets(last100TweetsConcat).then(result => {
+                addToLastSummaries(result);
+                redisClient.set(redisKeys.currentSummary, result);
+                redisClient.lRange(redisKeys.summariesList, 0, 100).then(summaries => {
+                    trendsFromSummaries(summaries).then(trends => {
+                    redisClient.set(redisKeys.currentTrends, JSON.stringify(trends, null, 2));
+                    })
+                });
+            });
+            subtopics(last100Tweets).then(result => {
+                redisClient.set(redisKeys.subtopics, JSON.stringify(result, null, 2));
+                // console.log(result);
+            });
         });
-        subtopics(last100Tweets).then(result => {
-            redisClient.set(redisKeys.subtopics, JSON.stringify(result, null, 2));
-            // console.log(result);
-        });
-        // getTrendsFromTweets(last100TweetsConcat).then(result => {
-        //     redisClient.set(redisKeys.currentTrends, JSON.stringify(result));
-        // });
     }
     counter++;
 });
