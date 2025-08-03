@@ -3,7 +3,7 @@ import { zodResponseFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
 
 const client = new OpenAI({
-  apiKey: process.env['OPENAI_API_KEY'], // This is the default and can be omitted
+    apiKey: process.env['OPENAI_API_KEY'], // This is the default and can be omitted
 });
 
 const trendsSchema = z.object({
@@ -43,15 +43,12 @@ export class TrendsList {
 
 export const getTrendsFromTweets = async (tweets: string): Promise<TrendsList> => {
     const prompt = `You are given a list of messages from a social media platform. Your task is to identify recurring trends or topics in the data. Just talk about the trends`; 
-    // todo enforce json schema at api call level
     const response = await client.chat.completions.create({
         model: model,
-        // instructions: 'You are a coding assistant that talks like a pirate',
-        // input: 'Are semicolons optional in JavaScript?',
-              messages: [
-                { role: 'system', content: prompt},
-                { role: 'user', content: tweets },
-      ],
+        messages: [
+            { role: 'system', content: prompt},
+            { role: 'user', content: tweets },
+        ],
         response_format: zodResponseFormat(trendsSchema, "trends")
     }).then(x => x.choices[0].message.content as string);
     console.log(`API Response: ${response}`);
@@ -67,10 +64,10 @@ export const shortSummaryOfTweets = async (tweets: string): Promise<string> => {
     `;
     const response = await client.chat.completions.create({
         model: model,
-              messages: [
-                { role: 'system', content: prompt},
-                { role: 'user', content: tweets },
-      ],
+        messages: [
+            { role: 'system', content: prompt},
+            { role: 'user', content: tweets },
+        ],
         response_format: zodResponseFormat(summarySchema, "summary")
     }).then(x => {
         const value = x.choices[0].message.content as string;
@@ -89,9 +86,9 @@ export const trendsFromSummaries = async (summaries: string[]): Promise<string[]
     const response = await client.chat.completions.create({
         model: model,
         messages: [
-        { role: 'system', content: prompt},
-        { role: 'user', content: summaries.join("\n") },
-      ],
+            { role: 'system', content: prompt},
+            { role: 'user', content: summaries.join("\n") },
+        ],
         response_format: zodResponseFormat(trendsSchema, "trends")
     }).then(x => {
         const value = x.choices[0].message.content as string;

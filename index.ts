@@ -60,7 +60,6 @@ jetstream.on("open", () => {
 
 jetstream.on("close", () => {
     console.log("close");
-    console.log(event);
 });
 
 jetstream.on("error", event => {
