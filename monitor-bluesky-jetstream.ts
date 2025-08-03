@@ -29,24 +29,25 @@ jetstream.onCreate("app.bsky.feed.post", (event) => {
     const text = event.commit.record.text;
     // sentimentAnalysisForEachTweet(text); // disabing for now
     addToLast100(text);
-    // add(redisKeys.messagesList, text);
-    // trim(redisKeys.messagesList, 0, 100);
     if (counter % 1000 == 0) {
-        // const last100 = 
+        // last 100 tweets -> subtopics ("news")
+        // last 100 tweets -> summary
+        // last 20 summaries -> trends
+        // todo: last 20 trends -> long lived trends?
+        // statistical sampling of 20 of the last 100 messages/summaries?
         redisClient.lRange(redisKeys.messagesList, 0, 100).then(last100Tweets => {
-            const last100TweetsConcat = last100Tweets.reduce((a,b) => `${a}\n${b}`);//todo get from redis
-            shortSummaryOfTweets(last100TweetsConcat).then(result => {
-                addToLastSummaries(result);
-                redisClient.set(redisKeys.currentSummary, result);
-                redisClient.lRange(redisKeys.summariesList, 0, 100).then(summaries => {
+            const last100TweetsConcat = last100Tweets.reduce((a,b) => `${a}\n${b}`);
+            shortSummaryOfTweets(last100TweetsConcat).then(summaryResult => {
+                addToLastSummaries(summaryResult);
+                redisClient.set(redisKeys.currentSummary, summaryResult);
+                redisClient.lRange(redisKeys.summariesList, 0, 20).then(summaries => {
                     trendsFromSummaries(summaries).then(trends => {
-                    redisClient.set(redisKeys.currentTrends, JSON.stringify(trends, null, 2));
+                        redisClient.set(redisKeys.currentTrends, JSON.stringify(trends, null, 2));
                     })
                 });
             });
             subtopics(last100Tweets).then(result => {
                 redisClient.set(redisKeys.subtopics, JSON.stringify(result, null, 2));
-                // console.log(result);
             });
         });
     }
