@@ -2,7 +2,7 @@
 import { Jetstream } from "@skyware/jetstream";
 
 import { add, redisClient, redisKeys, trim } from "./redisUtils.ts";
-import { getTrendsFromTweets, shortSummaryOfTweets, subtopics, trendsFromSummaries } from './ai-apis.ts';
+import { newsTopics, shortSummaryOfTweets, subtopics, trendsFromSummaries } from './ai-apis.ts';
 import { sentimentAnalysisForEachTweet } from './sentiment-analysis.ts';
 
 const jetstream = new Jetstream({
@@ -17,7 +17,7 @@ const jetstream = new Jetstream({
 let counter = 0; // used for calling summarization every X tweets
 const addToLast100 = (tweet: string) => {
     add(redisKeys.messagesList, tweet);
-    trim(redisKeys.messagesList, 0, 100);
+    trim(redisKeys.messagesList, 0, 1000);
 }
 
 const addToLastSummaries = (summary: string) => {
@@ -27,31 +27,45 @@ const addToLastSummaries = (summary: string) => {
 
 jetstream.onCreate("app.bsky.feed.post", (event) => {
     const text = event.commit.record.text;
-    // sentimentAnalysisForEachTweet(text); // disabing for now
+    // sentimentAnalysisForEachTweet(text); // disabing manual sentiment analysis in favor of AI APIs for now
     addToLast100(text);
-    if (counter % 1000 == 0) {
+    if (counter % 10000 == 500) {
         // last 100 tweets -> subtopics ("news")
         // last 100 tweets -> summary
         // last 20 summaries -> trends
         // todo: last 20 trends -> long lived trends?
         // statistical sampling of 20 of the last 100 messages/summaries?
-        redisClient.lRange(redisKeys.messagesList, 0, 100).then(last100Tweets => {
-            const last100TweetsConcat = last100Tweets.reduce((a,b) => `${a}\n${b}`);
-            shortSummaryOfTweets(last100TweetsConcat).then(summaryResult => {
-                addToLastSummaries(summaryResult);
-                redisClient.set(redisKeys.currentSummary, summaryResult);
-                redisClient.lRange(redisKeys.summariesList, 0, 20).then(summaries => {
-                    trendsFromSummaries(summaries).then(trends => {
-                        redisClient.set(redisKeys.currentTrends, JSON.stringify(trends, null, 2));
-                    })
+        if (false) { // disabling these calls for now to focus on newsTopics
+            redisClient.lRange(redisKeys.messagesList, 0, 100).then(last100Tweets => {
+                const last100TweetsConcat = last100Tweets.reduce((a,b) => `${a}\n${b}`);
+                shortSummaryOfTweets(last100TweetsConcat).then(summaryResult => {
+                    addToLastSummaries(summaryResult);
+                    redisClient.set(redisKeys.currentSummary, summaryResult);
+                    redisClient.lRange(redisKeys.summariesList, 0, 20).then(summaries => {
+                        trendsFromSummaries(summaries).then(trends => {
+                            redisClient.set(redisKeys.currentTrends, JSON.stringify(trends, null, 2));
+                        })
+                    });
                 });
             });
-            subtopics(last100Tweets).then(result => {
-                redisClient.set(redisKeys.subtopics, JSON.stringify(result, null, 2));
+            redisClient.lRange(redisKeys.messagesList, 0, 500).then(tweets => {
+                subtopics(tweets).then(result => {
+                    redisClient.set(redisKeys.subtopics, JSON.stringify(result, null, 2));
+                });
+                shortSummaryOfTweets(tweets.join("\n"), "Focus only on the Japanese language entries, but respond in English.");
             });
-        });
+        }
+    }
+    if (counter % 10000 == 1000) { //every 100k, but slighly staggered
+        redisClient.lRange(redisKeys.messagesList, 0, 900).then(tweets => {
+            redisClient.get(redisKeys.subtopics).then(subtopics => 
+                newsTopics(/* subtopics! */"", tweets).then(x => {
+                redisClient.set("newsTopics", JSON.stringify(x));
+            })
+        )})
     }
     counter++;
+    if (counter % 1000 == 0) console.log(counter);
 });
 
 jetstream.on("open", () => {
