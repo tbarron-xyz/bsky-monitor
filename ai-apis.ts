@@ -159,24 +159,27 @@ export const recurringSubtopics = async (subtopics: string[]): Promise<{}> => {
 
 
 const newsTopicsSchema = z.object({
+    frontPageHeadline: z.string(),
+    frontPageArticle: z.string(),
     topics: z.array(z.object({
         name: z.string(),
         headline: z.string(),
         newsStoryFirstParagraph: z.string(),
         newsStorySecondParagraph: z.string(),
+        oneLineSummary: z.string(),
         supportingSocialMediaMessage: z.string(),
         skepticalComment: z.string(),
         gullibleComment: z.string(),
     })),
-     modelFeedbackAboutThePrompt: z.object({positive: z.string(), negative: z.string()}), 
+    modelFeedbackAboutThePrompt: z.object({positive: z.string(), negative: z.string()}), 
     newspaperName: z.string(),
-    frontPageHeadline: z.string(),
-    frontPageArticle: z.string()
+
 });
 
 export const newsTopics = async (subtopics: string, tweets: string[]): Promise<{}> => {
-        const prompt = `You are given a list of trends, and a list of social media messages. From those messages, identify at least 5 newsworthy stories. Make sure there are at least five, and no less! Write a headline for each story in the style of a print newspaper from the early 20th century. Furthermore, for each story, generate the first and second paragraphs of an enthusiastically written news story focusing on that topic in a traditional understated evening news style. Utilize facts and opinions drawn from the provided social media messages when writing the news story, while also providing a fact or two from pre-existing knowledge about the topic. Each paragraph should be at least four sentences long. Include at least one social media message from among those provided which supports the story - this should be provided directly, without quotes around it or any commentary on it. Also include two generated comments on each news story, one of which is very skeptical and conspiratorial, and one of which is very gullible and patriotic. Also create a name for the newspaper based on the news stories and style. Then, to top it all off, choose a final lighthearted topic (or an aggregate of multiple topics) on which to write an invigorating headline and accompanying article for the front page that will make it impossible for readers to look away.
+        const prompt = `You are given a list of trends, and a list of social media messages. From those messages, identify one primary newsworthy story that would be suitable as the primary cover story of a newspaper; write a headline and the first paragraph of that cover story. Then identify exactly 5 more newsworthy stories. Make sure there are at least five, and no less! Write a headline for each story in the style of a print newspaper from the early 20th century. Furthermore, for each story, generate the first and second paragraphs of an enthusiastically written news story focusing on that topic in a traditional understated evening news style. Utilize facts and opinions drawn from the provided social media messages when writing the news story, while also providing a fact or two from pre-existing knowledge about the topic. Each paragraph should be at least four sentences long. Include at least one social media message from among those provided which supports the story - this should be provided directly, without quotes around it or any commentary on it. Also include two generated comments on each news story, one of which is very skeptical and conspiratorial, and one of which is very gullible and patriotic. Also create a clever name for the newspaper based on the news stories and style, and based on the fact that these stories were derived through analysis of social media posts.
     `;
+    // Unused phrase: Then, to top it all off, choose a final lighthearted topic (or an aggregate of multiple topics) on which to write an invigorating headline and accompanying article for the front page that will make it impossible for readers to look away.
     // console.log("Sending subtopics request");
     const response = await client.chat.completions.create({
         model: model,
@@ -197,6 +200,26 @@ export const newsTopics = async (subtopics: string, tweets: string[]): Promise<{
         }
     });
     return response;
+}
+
+export const newsImg = async (headline: string, body: string) => {
+    const prompt = `Create an image to accompany the following newspaper article. Don't include any text in the image.
+    
+    ${headline}
+    ---
+    ${body}`;
+
+    const result = await client.images.generate({
+        model: "gpt-image-1",
+        quality: "low",
+        size: "1024x1024",
+        prompt,
+    });
+
+    // Save the image to a file
+    const image_base64 = result.data![0].b64_json!;
+    const image_bytes = Buffer.from(image_base64, "base64");
+    return image_bytes;
 }
 
 // old functions contained hereon 

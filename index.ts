@@ -2,7 +2,7 @@
 import { Jetstream } from "@skyware/jetstream";
 
 import { add, redisClient, redisKeys, trim } from "./redisUtils.ts";
-import { newsTopics, shortSummaryOfTweets, subtopics, trendsFromSummaries } from './ai-apis.ts';
+import { newsImg, newsTopics, shortSummaryOfTweets, subtopics, trendsFromSummaries } from './ai-apis.ts';
 import { sentimentAnalysisForEachTweet } from './sentiment-analysis.ts';
 
 const jetstream = new Jetstream({
@@ -29,7 +29,8 @@ jetstream.onCreate("app.bsky.feed.post", (event) => {
     const text = event.commit.record.text;
     // sentimentAnalysisForEachTweet(text); // disabing manual sentiment analysis in favor of AI APIs for now
     addToLast100(text);
-    if (counter % 10000 == 500) {
+    const interval = 50000;
+    if (counter % interval == 500) {
         // last 100 tweets -> subtopics ("news")
         // last 100 tweets -> summary
         // last 20 summaries -> trends
@@ -56,11 +57,16 @@ jetstream.onCreate("app.bsky.feed.post", (event) => {
             });
         }
     }
-    if (counter % 10000 == 1000) { //every 100k, but slighly staggered
+    if (counter % interval == 1000) { //every 100k, but slighly staggered
         redisClient.lRange(redisKeys.messagesList, 0, 900).then(tweets => {
             redisClient.get(redisKeys.subtopics).then(subtopics => 
                 newsTopics(/* subtopics! */"", tweets).then(x => {
-                redisClient.set("newsTopics", JSON.stringify(x));
+                    redisClient.set("newsTopics", JSON.stringify(x));
+                    const z = x as any;
+                    newsImg(z.frontPageHeadline, z.frontPageParticle).then(img => {
+                        redisClient.set("img", img);
+                        console.log("Saved img.");
+                    });
             })
         )})
     }
