@@ -62,6 +62,7 @@ jetstream.onCreate("app.bsky.feed.post", (event) => {
             redisClient.get(redisKeys.subtopics).then(subtopics => 
                 newsTopics(/* subtopics! */"", tweets).then(x => {
                     redisClient.set("newsTopics", JSON.stringify(x));
+                    redisClient.set("newsTopicsTime", Date.now());
                     const z = x as any;
                     newsImg(z.frontPageHeadline, z.frontPageParticle).then(img => {
                         redisClient.set("img", img);

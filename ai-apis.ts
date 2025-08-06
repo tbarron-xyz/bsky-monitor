@@ -203,8 +203,9 @@ export const newsTopics = async (subtopics: string, tweets: string[]): Promise<{
 }
 
 export const newsImg = async (headline: string, body: string) => {
-    const prompt = `Create an image to accompany the following newspaper article. Don't include any text in the image.
+    const prompt = `Create an image to accompany the following newspaper article. The style should be photorealistic, like real photo from a physical camera; not hand-drawn. There should not be any text visible in the image.
     
+    ---
     ${headline}
     ---
     ${body}`;
