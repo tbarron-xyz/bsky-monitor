@@ -9,7 +9,8 @@ export const redisKeys = Object.freeze({
     currentTrends: "currentTrends",
     subtopics: "subtopics", 
     messagesList: "messagesList",
-    summariesList: "summariesList"
+    summariesList: "summariesList",
+    news: "newsList"
 });
 
 

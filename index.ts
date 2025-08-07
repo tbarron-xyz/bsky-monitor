@@ -25,6 +25,16 @@ const addToLastSummaries = (summary: string) => {
     trim(redisKeys.summariesList, 0, 100);
 }
 
+const addToTopics = (topics: string) => {
+    add(redisKeys.news, topics);
+    trim(redisKeys.news, 0, 5);
+}
+
+const addToNewsTime = (time: number) => {
+    add("timeList", time.toString());
+    trim("timeList", 0, 5);
+}
+
 jetstream.onCreate("app.bsky.feed.post", (event) => {
     const text = event.commit.record.text;
     // sentimentAnalysisForEachTweet(text); // disabing manual sentiment analysis in favor of AI APIs for now
@@ -61,8 +71,10 @@ jetstream.onCreate("app.bsky.feed.post", (event) => {
         redisClient.lRange(redisKeys.messagesList, 0, 900).then(tweets => {
             redisClient.get(redisKeys.subtopics).then(subtopics => 
                 newsTopics(/* subtopics! */"", tweets).then(x => {
+                    addToTopics(JSON.stringify(x));
                     redisClient.set("newsTopics", JSON.stringify(x));
                     redisClient.set("newsTopicsTime", Date.now());
+                    addToNewsTime(Date.now());
                     const z = x as any;
                     newsImg(z.frontPageHeadline, z.frontPageParticle).then(img => {
                         redisClient.set("img", img);
