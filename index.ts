@@ -39,7 +39,7 @@ jetstream.onCreate("app.bsky.feed.post", (event) => {
     const text = event.commit.record.text;
     // sentimentAnalysisForEachTweet(text); // disabing manual sentiment analysis in favor of AI APIs for now
     addToLast100(text);
-    const interval = 50000;
+    const interval = 100000;
     if (counter % interval == 500) {
         // last 100 tweets -> subtopics ("news")
         // last 100 tweets -> summary
