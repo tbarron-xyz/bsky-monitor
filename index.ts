@@ -27,12 +27,12 @@ const addToLastSummaries = (summary: string) => {
 
 const addToTopics = (topics: string) => {
     add(redisKeys.news, topics);
-    trim(redisKeys.news, 0, 5);
+    trim(redisKeys.news, 0, 4);
 }
 
 const addToNewsTime = (time: number) => {
     add("timeList", time.toString());
-    trim("timeList", 0, 5);
+    trim("timeList", 0, 4);
 }
 
 jetstream.onCreate("app.bsky.feed.post", (event) => {
