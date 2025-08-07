@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import { zodResponseFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
 import { minLength } from 'zod/v4';
+import { promises as fs } from 'fs';
 
 const client = new OpenAI({
     apiKey: process.env['OPENAI_API_KEY'], // This is the default and can be omitted
@@ -61,6 +62,7 @@ export const shortSummaryOfTweets = async (tweets: string, prefix?: string): Pro
         const jValue = summarySchema.parse(JSON.parse(value));
         console.log(`Your hard-earned dollars paid for this OpenAI API response: `);
         console.log(jValue);
+
         return jValue.summary;
     });
     return response;
@@ -194,6 +196,7 @@ export const newsTopics = async (subtopics: string, tweets: string[]): Promise<{
             const jValue = newsTopicsSchema.parse(JSON.parse(value));
             console.log(`Your hard-earned dollars paid for this OpenAI API response: `);
             console.log(jValue);
+            fs.writeFile(`./news.${((x: Date) => `${x.getFullYear()}-${x.getMonth()}-${x.getDate()}.${x.getHours()}-${x.getMinutes()}.txt`)(new Date())}`, JSON.stringify(jValue)).then(()=>{});
             return jValue;
         } catch (e) {
             return {};
@@ -220,6 +223,7 @@ export const newsImg = async (headline: string, body: string) => {
     // Save the image to a file
     const image_base64 = result.data![0].b64_json!;
     const image_bytes = Buffer.from(image_base64, "base64");
+    fs.writeFile(`./img.${((x: Date) => `${x.getFullYear()}-${x.getMonth()}-${x.getDate()}.${x.getHours()}-${x.getMinutes()}.jpg`)(new Date())}`, image_bytes).then(()=>{});
     return image_bytes;
 }
 
