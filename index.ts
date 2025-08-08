@@ -2,7 +2,7 @@
 import { Jetstream } from "@skyware/jetstream";
 
 import { add, redisClient, redisKeys, trim } from "./redisUtils.ts";
-import { newsImg, newsTopics, shortSummaryOfTweets, subtopics, trendsFromSummaries } from './ai-apis.ts';
+import { newsImg, newsImgGridClockwise, newsTopics, shortSummaryOfTweets, subtopics, trendsFromSummaries } from './ai-apis.ts';
 import { sentimentAnalysisForEachTweet } from './sentiment-analysis.ts';
 
 const jetstream = new Jetstream({
@@ -33,6 +33,16 @@ const addToTopics = (topics: string) => {
 const addToNewsTime = (time: number) => {
     add("timeList", time.toString());
     trim("timeList", 0, 4);
+}
+
+const addToImgList = (img: Buffer<ArrayBuffer>) => {
+    add("imgList", img);
+    trim("imgList", 0, 4);
+}
+
+const addToImgGridList = (img: Buffer<ArrayBuffer>) => {
+    add("imgGridList", img);
+    trim("imgGridList", 0, 4);
 }
 
 jetstream.onCreate("app.bsky.feed.post", (event) => {
@@ -77,8 +87,13 @@ jetstream.onCreate("app.bsky.feed.post", (event) => {
                     addToNewsTime(Date.now());
                     const z = x as any;
                     newsImg(z.frontPageHeadline, z.frontPageParticle).then(img => {
+                        addToImgList(img);
                         redisClient.set("img", img);
                         console.log("Saved img.");
+                    });
+                    newsImgGridClockwise(z.topics).then(img => {
+                        addToImgGridList(img);
+                        console.log("saved grid img.");
                     });
             })
         )})
@@ -103,5 +118,3 @@ jetstream.on("error", event => {
 console.log("constructed");
 jetstream.start();
 console.log("started");
-
-// TODO: activate tweets to trends every minute; recurring trends every 10 minutes; synthetic tweets every 10 minutes. Save synthetic tweets and send last 100 to UI.
