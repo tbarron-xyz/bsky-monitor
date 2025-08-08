@@ -15,9 +15,8 @@ const trendsSchema = z.object({
     }) )
 });
 
-
-
-const model = "gpt-4.1-nano";
+const model = "gpt-5-nano";
+// const model = "gpt-4.1-nano";
 
 export class TrendsList {
     trends: {name:string}[]
@@ -206,12 +205,31 @@ export const newsTopics = async (subtopics: string, tweets: string[]): Promise<{
 }
 
 export const newsImg = async (headline: string, body: string) => {
-    const prompt = `Create an image to accompany the following newspaper article. The style should be photorealistic, like real photo from a physical camera; not hand-drawn. There should not be any text visible in the image.
+    const prompt = `Create an image to accompany the following newspaper article. The style should be photorealistic, like real photo from a physical camera; not hand-drawn. There should not be any text visible in the image. The image should not be a grid of smaller images; it should be one single image.
     
     ---
     ${headline}
     ---
     ${body}`;
+
+    const result = await client.images.generate({
+        model: "gpt-image-1",
+        quality: "low",
+        size: "1024x1024",
+        prompt,
+    });
+
+    // Save the image to a file
+    const image_base64 = result.data![0].b64_json!;
+    const image_bytes = Buffer.from(image_base64, "base64");
+    fs.writeFile(`./img.${((x: Date) => `${x.getFullYear()}-${x.getMonth()}-${x.getDate()}.${x.getHours()}-${x.getMinutes()}.jpg`)(new Date())}`, image_bytes).then(()=>{});
+    return image_bytes;
+}
+
+export const newsImgGrid = async (stories: {headline: string, oneLineSummary: string}[]) => {
+    const prompt = `Generate a square grid of four images. The grid images should be, in clockwise order starting from the top left:
+    
+    ${stories.map((story,i)=> `${i}. ${story.headline} - ${story.oneLineSummary}\n`)}`;
 
     const result = await client.images.generate({
         model: "gpt-image-1",
