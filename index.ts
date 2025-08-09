@@ -96,12 +96,12 @@ jetstream.onCreate("app.bsky.feed.post", (event) => {
                         addToImgList(img);
                         redisClient.set("img", img);
                         console.log("Saved img.");
-                    });
+                    }, err => console.log(err));
                     newsImgGridClockwise(z.topics).then(img => {
                         addToImgGridList(img);
                         console.log("saved grid img.");
-                    });
-            })
+                    }, err => console.log(err));
+            }, err => console.log(err))
         )})
     }
     counter++;

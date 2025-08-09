@@ -8,6 +8,8 @@ const client = new OpenAI({
     apiKey: process.env['OPENAI_API_KEY'], // This is the default and can be omitted
 });
 
+const savePrefix = "./api_calls/";
+
 const trendsSchema = z.object({
     trends: z.array( z.object({
         name: z.string(),
@@ -96,12 +98,13 @@ export const newsTopics = async (subtopics: string, tweets: string[]): Promise<{
         response_format: zodResponseFormat(newsTopicsSchema, "topics")
     }).then(x => {
         try {
+            if (!x) return {};
             const value = x.choices[0].message.content as string;
             const jValue = newsTopicsSchema.parse(JSON.parse(value));
             console.log(`Your hard-earned dollars paid for this OpenAI API response: `);
             console.log(jValue);
             console.log(`${x.usage?.prompt_tokens} input, ${x.usage?.completion_tokens} output`);
-            fs.writeFile(`./news.${((x: Date) => `${x.getFullYear()}-${x.getMonth()}-${x.getDate()}.${x.getHours()}-${x.getMinutes()}.txt`)(new Date())}`, JSON.stringify(jValue)).then(()=>{});
+            fs.writeFile(`${savePrefix}news.${((x: Date) => `${x.getFullYear()}-${x.getMonth()}-${x.getDate()}.${x.getHours()}-${x.getMinutes()}.txt`)(new Date())}`, JSON.stringify(jValue)).then(()=>{});
             return jValue;
         } catch (e) {
             return {};
@@ -125,10 +128,11 @@ export const newsImg = async (headline: string, body: string) => {
         prompt,
     });
 
+
     // Save the image to a file
     const image_base64 = result.data![0].b64_json!;
     const image_bytes = Buffer.from(image_base64, "base64");
-    fs.writeFile(`./img.${((x: Date) => `${x.getFullYear()}-${x.getMonth()}-${x.getDate()}.${x.getHours()}-${x.getMinutes()}.jpg`)(new Date())}`, image_bytes).then(()=>{});
+    fs.writeFile(`${savePrefix}img.${((x: Date) => `${x.getFullYear()}-${x.getMonth()}-${x.getDate()}.${x.getHours()}-${x.getMinutes()}.jpg`)(new Date())}`, image_bytes).then(()=>{});
     return image_bytes;
 }
 
@@ -144,10 +148,11 @@ export const newsImgGridClockwise = async (stories: {headline: string, oneLineSu
         prompt,
     });
 
+
     // Save the image to a file
     const image_base64 = result.data![0].b64_json!;
     const image_bytes = Buffer.from(image_base64, "base64");
-    fs.writeFile(`./imggrid.${((x: Date) => `${x.getFullYear()}-${x.getMonth()}-${x.getDate()}.${x.getHours()}-${x.getMinutes()}.jpg`)(new Date())}`, image_bytes).then(()=>{});
+    fs.writeFile(`${savePrefix}imggrid.${((x: Date) => `${x.getFullYear()}-${x.getMonth()}-${x.getDate()}.${x.getHours()}-${x.getMinutes()}.jpg`)(new Date())}`, image_bytes).then(()=>{});
     return image_bytes;
 }
 
