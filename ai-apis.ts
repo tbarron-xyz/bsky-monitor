@@ -100,6 +100,7 @@ export const newsTopics = async (subtopics: string, tweets: string[]): Promise<{
             const jValue = newsTopicsSchema.parse(JSON.parse(value));
             console.log(`Your hard-earned dollars paid for this OpenAI API response: `);
             console.log(jValue);
+            console.log(`${x.usage?.prompt_tokens} input, ${x.usage?.completion_tokens} output`);
             fs.writeFile(`./news.${((x: Date) => `${x.getFullYear()}-${x.getMonth()}-${x.getDate()}.${x.getHours()}-${x.getMinutes()}.txt`)(new Date())}`, JSON.stringify(jValue)).then(()=>{});
             return jValue;
         } catch (e) {
