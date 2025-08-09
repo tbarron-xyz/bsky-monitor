@@ -14,10 +14,11 @@ const jetstream = new Jetstream({
     ], // omit to receive events from all dids
 });
 
+let lastIssueTime = parseInt(await redisClient.get("newsTopicsTime") || "0");
 let counter = 0; // used for calling summarization every X tweets
-const addToLast100 = (tweet: string) => {
+const addToLastMessages = (tweet: string) => {
     add(redisKeys.messagesList, tweet);
-    trim(redisKeys.messagesList, 0, 1000);
+    trim(redisKeys.messagesList, 0, 1500);
 }
 
 const addToLastSummaries = (summary: string) => {
@@ -48,7 +49,7 @@ const addToImgGridList = (img: Buffer<ArrayBuffer>) => {
 jetstream.onCreate("app.bsky.feed.post", (event) => {
     const text = event.commit.record.text;
     // sentimentAnalysisForEachTweet(text); // disabing manual sentiment analysis in favor of AI APIs for now
-    addToLast100(text);
+    addToLastMessages(text);
     const interval = 100000;
     if (counter % interval == 500) {
         // last 100 tweets -> subtopics ("news")
@@ -77,13 +78,18 @@ jetstream.onCreate("app.bsky.feed.post", (event) => {
             });
         }
     }
-    if (counter % interval == 1000) { //every 100k, but slighly staggered
-        redisClient.lRange(redisKeys.messagesList, 0, 900).then(tweets => {
+    const intervalHours = 2;
+    if (Date.now() - lastIssueTime > intervalHours * 1000 * 60 * 60) {
+    // }
+    // if (counter % interval == 1000) { //every 100k, but slighly staggered
+        redisClient.lRange(redisKeys.messagesList, 0, 1500).then(tweets => {
             redisClient.get(redisKeys.subtopics).then(subtopics => 
                 newsTopics(/* subtopics! */"", tweets).then(x => {
                     addToTopics(JSON.stringify(x));
                     redisClient.set("newsTopics", JSON.stringify(x));
-                    redisClient.set("newsTopicsTime", Date.now());
+                    const newTime = Date.now();
+                    redisClient.set("newsTopicsTime", newTime);
+                    lastIssueTime = newTime;
                     addToNewsTime(Date.now());
                     const z = x as any;
                     newsImg(z.frontPageHeadline, z.frontPageParticle).then(img => {
