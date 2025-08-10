@@ -113,6 +113,54 @@ export const newsTopics = async (subtopics: string, tweets: string[]): Promise<{
     return response;
 }
 
+const beatTopicSchema = z.object({
+        headline: z.string(),
+        newsStoryFirstParagraph: z.string(),
+        newsStorySecondParagraph: z.string(),
+        oneLineSummary: z.string(),
+        supportingSocialMediaMessage: z.string(),
+});
+const newsBeatsSchema = z.object({
+    middleEastBeat: z.array(beatTopicSchema),
+    financeBeat: z.array(beatTopicSchema),
+    aiBeat: z.array(beatTopicSchema),
+    sportsBeat: z.array(beatTopicSchema),
+    musicBeat: z.array(beatTopicSchema),
+    newYorkCityBeat: z.array(beatTopicSchema),
+    modelFeedbackAboutThePrompt: z.object({positive: z.string(), negative: z.string()}), 
+});
+
+export const newsBeats = async (tweets: string[]): Promise<{}> => {
+        const prompt = `You are given a list of social media messages. You are a reporter for an online newspaper, and you have been assigned multiple "beats" on which to identify newsworthy stories from the given messages. For each beat, identify exactly 2 newsworthy stories. Make sure there are two, and no less! Write a headline for each story in the style of a print newspaper from the early 20th century. Furthermore, for each story, generate the first and second paragraphs of an enthusiastically written news story focusing on that topic in a traditional understated evening news style. Utilize facts and opinions drawn from the provided social media messages when writing the news story, while also providing a fact or two from pre-existing knowledge about the topic. Each paragraph should be at least four sentences long. Include at least one social media message from among those provided which supports the story - this should be provided directly, without quotes around it or any commentary on it.
+        ---
+        The beats are as follows: 1. Middle East 2. Finance 3. AI 4. Sports 5. Music 6. New York City
+    `;
+    // Unused phrase: Then, to top it all off, choose a final lighthearted topic (or an aggregate of multiple topics) on which to write an invigorating headline and accompanying article for the front page that will make it impossible for readers to look away.
+    // console.log("Sending subtopics request");
+    const response = await client.chat.completions.create({
+        model: model,
+        messages: [
+            { role: 'system', content: prompt},
+            { role: 'user', content: `Social media messages:\n${tweets.join("\n")}` },
+        ],
+        response_format: zodResponseFormat(newsBeatsSchema, "topics")
+    }).then(x => {
+        try {
+            if (!x) return {};
+            const value = x.choices[0].message.content as string;
+            const jValue = newsBeatsSchema.parse(JSON.parse(value));
+            console.log(`Your hard-earned dollars paid for this OpenAI API response: `);
+            console.log(jValue);
+            console.log(`${x.usage?.prompt_tokens} input, ${x.usage?.completion_tokens} output`);
+            fs.writeFile(`${savePrefix}newsBeats.${((x: Date) => `${x.getFullYear()}-${x.getMonth()}-${x.getDate()}.${x.getHours()}-${x.getMinutes()}.txt`)(new Date())}`, JSON.stringify(jValue)).then(()=>{});
+            return jValue;
+        } catch (e) {
+            return {};
+        }
+    });
+    return response;
+}
+
 export const newsImg = async (headline: string, body: string) => {
     const prompt = `Create an image to accompany the following newspaper article. The style should be photorealistic, like a real photo from a physical camera; not hand-drawn. There should not be any text visible in the image. The image should not be a grid of smaller images; it should be one single image. The image should not contain graphic depictions of people or children suffering from starvation or malnutrition.
     
@@ -157,6 +205,7 @@ export const newsImgGridClockwise = async (stories: {headline: string, oneLineSu
 }
 
 export const adPlaceholder = async () => {
+    console.log("Sending API request for adPlaceholder");
     const prompt = `Generate an image that's vertically split in half. On each half should be a typical web banner ad, in vertical orientation. Use tropes and styles that were typical of web banner ads from the 2000s and 2010s, particularly annoying, scammy ads and popups.`;
 
     const result = await client.images.generate({

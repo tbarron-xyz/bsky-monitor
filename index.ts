@@ -2,7 +2,7 @@
 import { Jetstream } from "@skyware/jetstream";
 
 import { add, redisClient, redisKeys, trim } from "./redisUtils.ts";
-import { adPlaceholder, newsImg, newsImgGridClockwise, newsTopics, shortSummaryOfTweets, subtopics, trendsFromSummaries } from './ai-apis.ts';
+import { adPlaceholder, newsBeats, newsImg, newsImgGridClockwise, newsTopics, shortSummaryOfTweets, subtopics, trendsFromSummaries } from './ai-apis.ts';
 import { sentimentAnalysisForEachTweet } from './sentiment-analysis.ts';
 
 const jetstream = new Jetstream({
@@ -18,6 +18,15 @@ if (!await redisClient.get("fakeAdTime")) {
     adPlaceholder().then(x => {
         redisClient.set("fakeAd", x);
         redisClient.set("fakeAdTime", Date.now());
+    });
+}
+
+if (!await redisClient.get("beatsTime")) {
+    redisClient.lRange(redisKeys.messagesList, 0, 1500).then(tweets => {
+        newsBeats(tweets).then(x => {
+            redisClient.set("beats", JSON.stringify(x));
+            redisClient.set("beatsTime", Date.now());
+        });
     });
 }
 
@@ -85,10 +94,10 @@ jetstream.onCreate("app.bsky.feed.post", (event) => {
             });
         }
     }
-    const intervalHours = 2;
+    const intervalHours = 3;
     if (Date.now() - lastIssueTime > intervalHours * 1000 * 60 * 60) {
         lastIssueTime = Date.now(); //temporarily setting the global var so that future message handlers won't also invoke
-        redisClient.lRange(redisKeys.messagesList, 0, 900).then(tweets => {
+        redisClient.lRange(redisKeys.messagesList, 0, 1500).then(tweets => {
             console.log("Sending newsTopics API request.");
             newsTopics(/* subtopics! */"", tweets).then(x => {
                 addToTopics(JSON.stringify(x));
