@@ -156,6 +156,25 @@ export const newsImgGridClockwise = async (stories: {headline: string, oneLineSu
     return image_bytes;
 }
 
+export const adPlaceholder = async () => {
+    const prompt = `Generate an image that's vertically split in half. On each half should be a typical web banner ad, in vertical orientation. Use tropes and styles that were typical of web banner ads from the 2000s and 2010s, particularly annoying, scammy ads and popups.`;
+
+    const result = await client.images.generate({
+        model: "gpt-image-1",
+        quality: "low",
+        size: "1024x1024",
+        prompt,
+    });
+
+
+    // Save the image to a file
+    const image_base64 = result.data![0].b64_json!;
+    const image_bytes = Buffer.from(image_base64, "base64");
+    fs.writeFile(`${savePrefix}fakead.${((x: Date) => `${x.getFullYear()}-${x.getMonth()}-${x.getDate()}.${x.getHours()}-${x.getMinutes()}.jpg`)(new Date())}`, image_bytes).then(()=>{});
+    return image_bytes;
+}
+
+
 
 
 

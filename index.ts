@@ -2,7 +2,7 @@
 import { Jetstream } from "@skyware/jetstream";
 
 import { add, redisClient, redisKeys, trim } from "./redisUtils.ts";
-import { newsImg, newsImgGridClockwise, newsTopics, shortSummaryOfTweets, subtopics, trendsFromSummaries } from './ai-apis.ts';
+import { adPlaceholder, newsImg, newsImgGridClockwise, newsTopics, shortSummaryOfTweets, subtopics, trendsFromSummaries } from './ai-apis.ts';
 import { sentimentAnalysisForEachTweet } from './sentiment-analysis.ts';
 
 const jetstream = new Jetstream({
@@ -13,6 +13,13 @@ const jetstream = new Jetstream({
         // "did:web:example.com"
     ], // omit to receive events from all dids
 });
+
+if (!await redisClient.get("fakeAdTime")) {
+    adPlaceholder().then(x => {
+        redisClient.set("fakeAd", x);
+        redisClient.set("fakeAdTime", Date.now());
+    });
+}
 
 let lastIssueTime = parseInt(await redisClient.get("newsTopicsTime") || "0");
 let counter = 0; // used for calling summarization every X tweets
@@ -81,8 +88,6 @@ jetstream.onCreate("app.bsky.feed.post", (event) => {
     const intervalHours = 2;
     if (Date.now() - lastIssueTime > intervalHours * 1000 * 60 * 60) {
         lastIssueTime = Date.now(); //temporarily setting the global var so that future message handlers won't also invoke
-    // }
-    // if (counter % interval == 1000) { //every 100k, but slighly staggered
         redisClient.lRange(redisKeys.messagesList, 0, 900).then(tweets => {
             console.log("Sending newsTopics API request.");
             newsTopics(/* subtopics! */"", tweets).then(x => {
