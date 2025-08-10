@@ -51,13 +51,13 @@ jetstream.onCreate("app.bsky.feed.post", (event) => {
     // sentimentAnalysisForEachTweet(text); // disabing manual sentiment analysis in favor of AI APIs for now
     addToLastMessages(text);
     const interval = 100000;
-    if (counter % interval == 500) {
+    if (false) { // disabling these calls for now to focus on newsTopics
+        if (counter % interval == 500) {
         // last 100 tweets -> subtopics ("news")
         // last 100 tweets -> summary
         // last 20 summaries -> trends
         // todo: last 20 trends -> long lived trends?
         // statistical sampling of 20 of the last 100 messages/summaries?
-        if (false) { // disabling these calls for now to focus on newsTopics
             redisClient.lRange(redisKeys.messagesList, 0, 100).then(last100Tweets => {
                 const last100TweetsConcat = last100Tweets.reduce((a,b) => `${a}\n${b}`);
                 shortSummaryOfTweets(last100TweetsConcat).then(summaryResult => {
@@ -84,26 +84,26 @@ jetstream.onCreate("app.bsky.feed.post", (event) => {
     // }
     // if (counter % interval == 1000) { //every 100k, but slighly staggered
         redisClient.lRange(redisKeys.messagesList, 0, 900).then(tweets => {
-            redisClient.get(redisKeys.subtopics).then(subtopics => 
-                newsTopics(/* subtopics! */"", tweets).then(x => {
-                    addToTopics(JSON.stringify(x));
-                    redisClient.set("newsTopics", JSON.stringify(x));
-                    const newTime = Date.now();
-                    redisClient.set("newsTopicsTime", newTime);
-                    lastIssueTime = newTime;
-                    addToNewsTime(Date.now());
-                    const z = x as any;
-                    newsImg(z.frontPageHeadline, z.frontPageParticle).then(img => {
-                        addToImgList(img);
-                        redisClient.set("img", img);
-                        console.log("Saved img.");
-                    }, err => console.log(err));
-                    newsImgGridClockwise(z.topics).then(img => {
-                        addToImgGridList(img);
-                        console.log("saved grid img.");
-                    }, err => console.log(err));
-            }, err => console.log(err))
-        )})
+            console.log("Sending newsTopics API request.");
+            newsTopics(/* subtopics! */"", tweets).then(x => {
+                addToTopics(JSON.stringify(x));
+                redisClient.set("newsTopics", JSON.stringify(x));
+                const newTime = Date.now();
+                redisClient.set("newsTopicsTime", newTime);
+                lastIssueTime = newTime;
+                addToNewsTime(Date.now());
+                const z = x as any;
+                newsImg(z.frontPageHeadline, z.frontPageParticle).then(img => {
+                    addToImgList(img);
+                    redisClient.set("img", img);
+                    console.log("Saved img.");
+                }, err => console.log(err));
+                newsImgGridClockwise(z.topics).then(img => {
+                    addToImgGridList(img);
+                    console.log("saved grid img.");
+                }, err => console.log(err));
+            }, err => console.log(err));
+        });
     }
     counter++;
     if (counter % 1000 == 0) console.log(counter);
