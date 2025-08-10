@@ -82,7 +82,7 @@ jetstream.onCreate("app.bsky.feed.post", (event) => {
     if (Date.now() - lastIssueTime > intervalHours * 1000 * 60 * 60) {
     // }
     // if (counter % interval == 1000) { //every 100k, but slighly staggered
-        redisClient.lRange(redisKeys.messagesList, 0, 1500).then(tweets => {
+        redisClient.lRange(redisKeys.messagesList, 0, 900).then(tweets => {
             redisClient.get(redisKeys.subtopics).then(subtopics => 
                 newsTopics(/* subtopics! */"", tweets).then(x => {
                     addToTopics(JSON.stringify(x));
