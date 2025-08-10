@@ -80,6 +80,7 @@ jetstream.onCreate("app.bsky.feed.post", (event) => {
     }
     const intervalHours = 2;
     if (Date.now() - lastIssueTime > intervalHours * 1000 * 60 * 60) {
+        lastIssueTime = Date.now(); //temporarily setting the global var so that future message handlers won't also invoke
     // }
     // if (counter % interval == 1000) { //every 100k, but slighly staggered
         redisClient.lRange(redisKeys.messagesList, 0, 900).then(tweets => {
