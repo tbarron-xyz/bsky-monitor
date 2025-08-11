@@ -127,13 +127,14 @@ const newsBeatsSchema = z.object({
     sportsBeat: z.array(beatTopicSchema),
     musicBeat: z.array(beatTopicSchema),
     newYorkCityBeat: z.array(beatTopicSchema),
+    sanFranciscoBeat: z.array(beatTopicSchema),
     modelFeedbackAboutThePrompt: z.object({positive: z.string(), negative: z.string()}), 
 });
 
 export const newsBeats = async (tweets: string[]): Promise<{}> => {
         const prompt = `You are given a list of social media messages. You are a reporter for an online newspaper, and you have been assigned multiple "beats" on which to identify newsworthy stories from the given messages. For each beat, identify exactly 2 newsworthy stories. Make sure there are two, and no less! Write a headline for each story in the style of a print newspaper from the early 20th century. Furthermore, for each story, generate the first and second paragraphs of an enthusiastically written news story focusing on that topic in a traditional understated evening news style. Utilize facts and opinions drawn from the provided social media messages when writing the news story, while also providing a fact or two from pre-existing knowledge about the topic. Each paragraph should be at least four sentences long. Include at least one social media message from among those provided which supports the story - this should be provided directly, without quotes around it or any commentary on it.
         ---
-        The beats are as follows: 1. Middle East 2. Finance 3. AI 4. Sports 5. Music 6. New York City
+        The beats are as follows: 1. Middle East 2. Finance 3. AI 4. Sports 5. Music 6. New York City 7. San Francisco
     `;
     // Unused phrase: Then, to top it all off, choose a final lighthearted topic (or an aggregate of multiple topics) on which to write an invigorating headline and accompanying article for the front page that will make it impossible for readers to look away.
     // console.log("Sending subtopics request");
