@@ -1,5 +1,5 @@
 
-import { Jetstream } from "@skyware/jetstream";
+import { TinyJetstream as Jetstream } from "mbjc/tinyjetstream.min.js";
 
 import { add, redisClient, redisKeys, trim } from "./redisUtils.ts";
 import { adPlaceholder, newsBeats, newsImg, newsImgGridClockwise, newsTopics, shortSummaryOfTweets, subtopics, trendsFromSummaries } from './ai-apis.ts';
@@ -62,7 +62,8 @@ const addToImgGridList = (img: Buffer<ArrayBuffer>) => {
     trim("imgGridList", 0, 4);
 }
 
-jetstream.onCreate("app.bsky.feed.post", (event) => {
+// jetstream.onCreate("app.bsky.feed.post", (event) => {
+jetstream.onTweet = (event) => {
     const text = event.commit.record.text;
     // sentimentAnalysisForEachTweet(text); // disabing manual sentiment analysis in favor of AI APIs for now
     addToLastMessages(text);
@@ -121,20 +122,21 @@ jetstream.onCreate("app.bsky.feed.post", (event) => {
     }
     counter++;
     if (counter % 1000 == 0) console.log(counter);
-});
+};
+// });
 
-jetstream.on("open", () => {
-    console.log("open");
-});
+// jetstream.on("open", () => {
+//     console.log("open");
+// });
 
-jetstream.on("close", () => {
-    console.log("close");
-});
+// jetstream.on("close", () => {
+//     console.log("close");
+// });
 
-jetstream.on("error", event => {
-    console.log("error");
-    console.log(event);
-});
+// jetstream.on("error", event => {
+//     console.log("error");
+//     console.log(event);
+// });
 
 console.log("constructed");
 jetstream.start();
