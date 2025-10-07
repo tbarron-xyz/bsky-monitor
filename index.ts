@@ -1,18 +1,11 @@
 
-import { TinyJetstream as Jetstream } from "mbjc/tinyjetstream.min.js";
+import { TinyJetstream as Jetstream } from "mbjc/tinyjetstream";
 
 import { add, redisClient, redisKeys, trim } from "./redisUtils.ts";
 import { adPlaceholder, newsBeats, newsImg, newsImgGridClockwise, newsTopics, shortSummaryOfTweets, subtopics, trendsFromSummaries } from './ai-apis.ts';
 import { sentimentAnalysisForEachTweet } from './sentiment-analysis.ts';
 
-const jetstream = new Jetstream({
-	wantedCollections: ["app.bsky.feed.post",
-        //  "app.bsky.feed.like"
-        ], // omit to receive all collections
-	wantedDids: [
-        // "did:web:example.com"
-    ], // omit to receive events from all dids
-});
+const jetstream = new Jetstream();
 
 if (!await redisClient.get("fakeAdTime")) {
     adPlaceholder().then(x => {
