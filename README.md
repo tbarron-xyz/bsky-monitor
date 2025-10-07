@@ -1,6 +1,6 @@
 # bsky-monitor
 
-A real-time social media monitoring and analysis system for Bluesky (formerly Twitter), focused on financial sentiment and trend analysis.
+A real-time social media monitoring and analysis system for Bluesky, focused on financial sentiment and trend analysis.
 
 ## Purpose
 
@@ -28,7 +28,6 @@ bsky-monitor/
 │   └── .gitignore
 ├── package.json            # Node.js dependencies and project metadata
 ├── package-lock.json       # Dependency lock file
-└── oldindex.ts             # Legacy version of main file
 ```
 
 ## Dependencies
@@ -37,7 +36,6 @@ bsky-monitor/
 - **OpenAI**: For AI-powered content generation and image creation
 - **Redis**: For data storage and caching
 - **Sentiment**: For basic sentiment analysis
-- **Express**: For potential API serving (currently demo-only)
 - **CSV-parse**: For parsing S&P 500 company data
 - **Zod**: For response validation
 
