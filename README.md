@@ -1,5 +1,7 @@
 # bsky-monitor
 
+![Build Status](https://github.com/tbarron-xyz/bsky-monitor/actions/workflows/build.yml/badge.svg)
+
 A real-time social media monitoring and analysis system for Bluesky, focused on financial sentiment and trend analysis.
 
 ## Purpose
