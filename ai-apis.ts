@@ -10,10 +10,6 @@ const client = new OpenAI({
 const savePrefix = "./api_calls/";
 
 const model = "gpt-5-nano";
-// const model = "gpt-4.1-nano";
-
-
-
 
 const newsTopicsSchema = z.object({
     frontPageHeadline: z.string(),
@@ -97,7 +93,6 @@ export const newsImgGridClockwise = async (stories: {headline: string, oneLineSu
         prompt,
     });
 
-
     // Save the image to a file
     const image_base64 = result.data![0].b64_json!;
     const image_bytes = Buffer.from(image_base64, "base64");
@@ -115,7 +110,6 @@ export const adPlaceholder = async () => {
         size: "1024x1024",
         prompt,
     });
-
 
     // Save the image to a file
     const image_base64 = result.data![0].b64_json!;

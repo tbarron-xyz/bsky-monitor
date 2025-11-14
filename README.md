@@ -6,12 +6,10 @@ A real-time social media monitoring and analysis system for Bluesky, focused on 
 
 ## Purpose
 
-This project monitors Bluesky posts in real-time, analyzes sentiment related to S&P 500 companies, extracts trending topics, and generates AI-powered "newspapers" with articles and accompanying images. It provides insights into public sentiment and discussions around major corporations and financial markets.
+This project monitors Bluesky posts in real-time, and generates AI-powered "newspapers" with articles and accompanying images. It provides insights into public sentiment and discussions.
 
 Key features:
 - Real-time monitoring of Bluesky posts using TinyJetstream
-- Sentiment analysis for mentions of S&P 500 companies
-- AI-powered summarization and trend extraction using OpenAI GPT
 - Automated generation of news articles and images
 - Redis-based data storage for mentions, sentiment scores, and generated content
 - API endpoints for retrieving sentiment data and trends
@@ -20,9 +18,12 @@ Key features:
 
 ```
 bsky-monitor/
+├── .github/
+│   └── workflows/
+│       └── build.yml
+├── .gitignore
 ├── index.ts                 # Main application entry point - sets up Bluesky monitoring
 ├── ai-apis.ts              # OpenAI API integrations for summarization, news generation, and image creation
-├── sentiment-analysis.ts   # Sentiment analysis for S&P 500 company mentions
 ├── redisUtils.ts           # Redis database utilities and key definitions
 ├── serve-api.ts            # API functions for retrieving stored data
 ├── sp500_companies.csv     # S&P 500 company data for sentiment tracking
@@ -30,6 +31,7 @@ bsky-monitor/
 │   └── .gitignore
 ├── package.json            # Node.js dependencies and project metadata
 ├── package-lock.json       # Dependency lock file
+└── README.md               # This file
 ```
 
 ## Dependencies
@@ -37,18 +39,16 @@ bsky-monitor/
 - **TinyJetstream (mbjc)**: For real-time Bluesky post streaming
 - **OpenAI**: For AI-powered content generation and image creation
 - **Redis**: For data storage and caching
-- **Sentiment**: For basic sentiment analysis
-- **CSV-parse**: For parsing S&P 500 company data
 - **Zod**: For response validation
 
 ## How It Works
 
 1. **Monitoring**: Listens to Bluesky posts using TinyJetstream
-2. **Sentiment Analysis**: Scans posts for S&P 500 company mentions and analyzes sentiment
-3. **Data Storage**: Stores mentions, sentiment scores, and post content in Redis
-4. **Trend Extraction**: Periodically summarizes recent posts and identifies trends
-5. **News Generation**: Every 3 hours, generates a "newspaper" with front-page stories and topics
-6. **Image Creation**: Uses AI to generate accompanying images for articles
+
+
+
+2. **News Generation**: Every 3 hours, generates a "newspaper" with front-page stories and topics
+3. **Image Creation**: Uses AI to generate accompanying images for articles
 
 ## Usage
 

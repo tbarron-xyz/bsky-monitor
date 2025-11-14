@@ -13,9 +13,6 @@ export const redisKeys = Object.freeze({
     news: "newsList"
 });
 
-
-
-
 export async function trim(key, start, stop) {
     await redisClient.lTrim(key, start, stop);
 }

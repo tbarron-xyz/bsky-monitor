@@ -13,23 +13,12 @@ if (!await redisClient.get("fakeAdTime")) {
     });
 }
 
-if (!await redisClient.get("beatsTime")) {
-    redisClient.lRange(redisKeys.messagesList, 0, 1500).then(tweets => {
-        newsBeats(tweets).then(x => {
-            redisClient.set("beats", JSON.stringify(x));
-            redisClient.set("beatsTime", Date.now());
-        });
-    });
-}
-
 let lastIssueTime = parseInt(await redisClient.get("newsTopicsTime") || "0");
 let counter = 0; // used for calling summarization every X tweets
 const addToLastMessages = (tweet: string) => {
     add(redisKeys.messagesList, tweet);
     trim(redisKeys.messagesList, 0, 1500);
 }
-
-
 
 const addToTopics = (topics: string) => {
     add(redisKeys.news, topics);
