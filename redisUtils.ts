@@ -14,11 +14,7 @@ export const redisKeys = Object.freeze({
 });
 
 
-export async function incrAndExpire(key, field, incrementBy, expireSeconds) {    // uses global redisClient
-    await redisClient.hIncrBy(key, field, incrementBy);
-    await redisClient.hExpire(key, field, expireSeconds);
-    console.log(`iAE'd ${key} ${field}`);
-}
+
 
 export async function trim(key, start, stop) {
     await redisClient.lTrim(key, start, stop);
